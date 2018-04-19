@@ -1,0 +1,8 @@
+# depslib dependency file v1.0
+1524162264 source:c:\users\andrei\documents\codeblocks projects\oop homework 2 #8\main.cpp
+	<iostream>
+	<iomanip>
+	<fstream>
+	<cassert>
+	<algorithm>
+
