@@ -136,9 +136,47 @@ class complexNumber{
         }
 };
 
+template <typename T> class matrix_patratica;
+template <typename T> class matrix_oarecare;
+
 template <typename T> class matrix{
     private:
+        friend ostream& operator<<(ostream& out, matrix<T> A){ /// [667] De ce ostream& cu ampersand? (cumva ca sa poata scrie in el?)
+            //out<<A.height<<" "<<A.width<<"\n";
+            for(int i=0; i<A.height; ++i)
+            {
+                for(int j=0; j<A.width; ++j)
+                    out<<A.data[i][j]<<" ";
+                out<<"\n";
+            }
+            return out;
+        }
+
+        friend istream& operator>>(istream& in, matrix<T>& A){
+            //A.clearData(); /// [666] Remove this line for less crashes (yes)
+            in>>A.height>>A.width;
+            A.data = new T*[A.height];
+            for(int i=0; i<A.height; ++i)
+            {
+                A.data[i] = new T[A.width];
+                for(int j=0; j<A.width; ++j)
+                    in>>A.data[i][j];
+            }
+            return in;
+        }
     protected:
+        matrix(int linii, int coloane){
+            height = linii;
+            width = coloane;
+
+            data = new T*[height];
+            for(int i=0; i<height; ++i)
+            {
+                data[i] = new T[width];
+                for(int j=0; j<width; ++j)
+                    data[i][j] = 0;
+            }
+        }
     public:
         int height, width;
         T **data = NULL;
@@ -283,23 +321,50 @@ template <typename T> class matrix{
                 throw overflow_error("First Width and Second Height don't match! Cannot multiply matrixes.");
         }
 
-        matrix stripSubmatrix(int stripRow, int stripCol){
-            matrix smallerMatrix;
+        virtual matrix stripSubmatrix(int stripRow, int stripCol){
+            throw "Cannot strip a submatrix!";
+        }
 
-            smallerMatrix.height = height - 1;
-            smallerMatrix.width = width - 1;
-            smallerMatrix.data = new T*[height-1];
+        virtual matrix inverseMatrix(){
+            throw "Cannot compute the inverse Matrix!";
+        }
+
+        virtual T determinant(){
+            throw "Cannot compute the Determinant!";
+        }
+};
+
+template <typename T> class matrix_patratica : public matrix<T>{
+    private:
+    protected:
+    public:
+        matrix_patratica(){
+        }
+
+        ~matrix_patratica(){
+            cout<<"Destroying matrix_patratica...\n";
+        }
+
+        matrix_patratica(int linii_si_coloane) : matrix<T>(linii_si_coloane, linii_si_coloane){
+        }
+
+        matrix_patratica stripSubmatrix(int stripRow, int stripCol) const{
+            matrix_patratica smallerMatrix;
+
+            smallerMatrix.height = this->height - 1;
+            smallerMatrix.width = this->width - 1;
+            smallerMatrix.data = new T*[this->height-1];
             int crtSmallRow = 0;
-            for(int row = 0; row < height; ++row)
+            for(int row = 0; row < this->height; ++row)
             {
                 if(row == stripRow) continue; /// Skip the row we're currently stripping
-                smallerMatrix.data[crtSmallRow] = new T[width-1];
+                smallerMatrix.data[crtSmallRow] = new T[this->width-1];
                 int crtSmallCol = 0;
-                for(int col=0; col<width; ++col)
+                for(int col=0; col<this->width; ++col)
                 {
                     if(col == stripCol) continue; /// Skip the column we're currently stripping
 
-                    smallerMatrix.data[crtSmallRow][crtSmallCol] = data[row][col];
+                    smallerMatrix.data[crtSmallRow][crtSmallCol] = this->data[row][col];
                     ++crtSmallCol;
                 }
                 ++crtSmallRow;
@@ -308,45 +373,46 @@ template <typename T> class matrix{
             return smallerMatrix;
         }
 
-        T determinant(){
-            if(height == width){
-                if(height == 1)
-                    return data[0][0];
-                else if(height == 2)
-                    return data[0][0] * data[1][1] - data[1][0] * data[0][1];
+        T determinant() const{
+            if(this->height == this->width){
+                if(this->height == 1)
+                    return this->data[0][0];
+                else if(this->height == 2)
+                    return this->data[0][0] * this->data[1][1] - this->data[1][0] * this->data[0][1];
                 else{
                     T res;
                     res = 0;
-                    for(int stripCol = 0; stripCol < width; ++stripCol)
+                    for(int stripCol = 0; stripCol < this->width; ++stripCol)
                     {
-                        matrix smallerMatrix = stripSubmatrix(0, stripCol);
+                        matrix_patratica smallerMatrix = stripSubmatrix(0, stripCol);
                         T crtDeterminant = smallerMatrix.determinant();
                         if(stripCol % 2 == 1)
                             crtDeterminant = crtDeterminant * (-1);
-                        res = res + data[0][stripCol]*crtDeterminant;
+                        res = res + this->data[0][stripCol]*crtDeterminant;
                     }
                     return res;
                 }
             }
+            else
+                throw overflow_error("Height is not equal to width! Cannot calculate Matrix determinant.");
         }
 
-        matrix inverseMatrix(){
-            T det;
-            det = determinant();
+        matrix_patratica inverseMatrix() const{
+            T det = determinant();
             T inverseDeterminant;
             inverseDeterminant = 1 / det;
 
-            matrix res;
-            res.height = height;
-            res.width = width;
-            res.data = new T*[height];
-            for(int row=0; row<height; ++row)
-                res.data[row] = new T[width];
-            for(int row=0; row<height; ++row)
+            matrix_patratica res;
+            res.height = this->height;
+            res.width = this->width;
+            res.data = new T*[this->height];
+            for(int row=0; row<this->height; ++row)
+                res.data[row] = new T[this->width];
+            for(int row=0; row<this->height; ++row)
             {
-                for(int col=0; col<width; ++col)
+                for(int col=0; col<this->width; ++col)
                 {
-                    matrix A_star = stripSubmatrix(row, col);
+                    matrix_patratica A_star = stripSubmatrix(row, col);
                     T A_star_det = A_star.determinant();
                     res.data[col][row] = A_star_det * inverseDeterminant; /// [col][row] for transposition
                     if((col+row)%2 == 1)
@@ -356,7 +422,47 @@ template <typename T> class matrix{
             return res;
         }
 
-        friend istream& operator>>(istream& in, matrix<T>& A){
+        friend istream& operator>>(istream& in, matrix_patratica<T>& A){
+            //A.clearData(); /// [666] Remove this line for less crashes (yes)
+            in>>A.height;
+            A.width = A.height;
+            A.data = new T*[A.height];
+            for(int i=0; i<A.height; ++i)
+            {
+                A.data[i] = new T[A.width];
+                for(int j=0; j<A.width; ++j)
+                    in>>A.data[i][j];
+            }
+            return in;
+        }
+
+        friend ostream& operator<<(ostream& out, matrix_patratica<T> A){ /// [667] Aici as putea scrie "matrix<T>& A", nu-i asa? :D
+            for(int i=0; i<A.height; ++i)
+            {
+                for(int j=0; j<A.width; ++j)
+                    out<<A.data[i][j]<<" ";
+                out<<"\n";
+            }
+            out<<"Determinantul este = "<<A.determinant()<<"\n";
+            return out;
+        }
+};
+
+template <typename T> class matrix_oarecare : public matrix<T>{
+    private:
+    protected:
+    public:
+        matrix_oarecare(){
+        }
+
+        ~matrix_oarecare(){
+            cout<<"Destroying matrix_oarecare...\n";
+        }
+
+        matrix_oarecare(int linii, int coloane) : matrix<T>(linii, coloane){
+        }
+
+        friend istream& operator>>(istream& in, matrix_oarecare<T>& A){ /// [667] De ce istream& cu ampersand?
             //A.clearData(); /// [666] Remove this line for less crashes (yes)
             in>>A.height>>A.width;
             A.data = new T*[A.height];
@@ -368,29 +474,9 @@ template <typename T> class matrix{
             }
             return in;
         }
-
-        friend ostream& operator<<(ostream& out, matrix<T> A){
-            //out<<A.height<<" "<<A.width<<"\n";
-            for(int i=0; i<A.height; ++i)
-            {
-                for(int j=0; j<A.width; ++j)
-                    out<<A.data[i][j]<<" ";
-                out<<"\n";
-            }
-            return out;
-        }
-
-        virtual hello(){
-            cout<<"Hi!";
-        }
 };
 
-template <typename T> class matrix_oarecare : matrix<T>{
-    matrix_oarecare(){
-        cout<<"Constructing";
-        this.hello();
-    }
-};
+
 
 void unitTest_complexNumber(){
     complexNumber a(3, 5);
@@ -470,7 +556,7 @@ void unitTest_matrix_and_task_2(){
     cout<<"A*B = \n"; cout<<E; cout<<"\n";
     in2.close();
 
-    /// Determinant
+    /*/// Determinant
     cout<<"A's Determinant = "; cout<<A.determinant(); cout<<"\n";
 
     /// Inverse
@@ -481,7 +567,7 @@ void unitTest_matrix_and_task_2(){
     /// A * AA
 //    matrix<complexNumber> P;
     P = A * AA;
-    cout<<"A * AA = \n"; cout<<P; cout<<"\n";
+    cout<<"A * AA = \n"; cout<<P; cout<<"\n";*/
 }
 
 void complex_number_task_1(){
@@ -511,9 +597,67 @@ void firstHomework(){
     unitTest_matrix_and_task_2();
 }
 
+void unitTest_task_2(){
+    cout<<"-------------------- Unit Test Begins --------------------\n";
+    matrix_patratica<int> A(4);
+    cout<<"A = \n"<<A<<"\n";
+    for(int i=0; i<4; ++i)
+        for(int j=0; j<4; ++j)
+            assert(A.data[i][j] == 0);
+
+    matrix_oarecare<int> B(2, 3);
+    cout<<"B = \n"<<B<<"\n";
+    for(int i=0; i<2; ++i)
+        for(int j=0; j<3; ++j)
+            assert(B.data[i][j] == 0);
+
+    matrix_patratica<int> C(2);
+    C.data[0][0] = 7;
+    C.data[0][1] = 3;
+    C.data[1][0] = 8;
+    C.data[1][1] = 9;
+    cout<<"C = \n"<<C<<"\n";
+    assert(C.determinant() == 39);
+    cout<<"--------------------- Unit Test Ends ---------------------\n";
+}
+
+void secondHomework(){
+    cout<<"==================================================\n";
+    cout<<"===================== TEMA 2 =====================\n";
+    cout<<"==================================================\n\n";
+
+    /// Unit Tests
+    unitTest_task_2();
+
+    /// Solve Task 2
+    ifstream in("homework_2_data.in");
+
+    typedef complexNumber crtType;
+    int tip_matrice; /// 1 = matrice patratica
+                     /// 2 = matrice oarecare
+    while(in>>tip_matrice){
+        if(tip_matrice == 1){ /// [667] O mare parte din cod se repeta... Cum pot evita asta?
+            matrix_patratica<crtType> A;
+
+            in>>A;
+            cout<<"A = \n";
+            cout<<A; /// [667] De ce merge cout? metoda friend-uita e privata :/
+        }
+        else{
+            matrix_oarecare<crtType> A;
+            in>>A;
+            cout<<"A = \n";
+            cout<<A;
+        }
+        cout<<"\n";
+    }
+    in.close();
+}
+
 int main()
 {
     firstHomework();
+    secondHomework();
 
     return 0;
 }
