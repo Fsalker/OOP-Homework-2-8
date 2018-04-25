@@ -9,6 +9,12 @@ ifstream in("data.in");
 
 const bool SUPPRESS_LOGS = 1;
 const bool SUPPRESS_LOGS_SOFT = 1;
+const double EPSILON = 1e-6;
+
+double abso(double a){
+    if(a < 0) return -a;
+    return a;
+}
 
 class complexNumber{
     private:
@@ -20,6 +26,11 @@ class complexNumber{
         complexNumber(double x, double y){
             this->x = x;
             this->y = y;
+        }
+
+        complexNumber(int x){
+            this->x = x;
+            this->y = 0;
         }
 
         complexNumber(){
@@ -113,13 +124,19 @@ class complexNumber{
         }
 
         friend ostream& operator<<(ostream& out, complexNumber nr){
-            out<<nr.x<<" "<<nr.y<<" ";
+            double x = nr.x;
+            double y = nr.y;
+
+            if(abso(x - int(x)) <= EPSILON) x = int(x); /// Pretty printing!
+            if(abso(y - int(y)) <= EPSILON) y = int(y);
+
+            //out<<nr.x<<" "<<nr.y<<" ";
+            out<<x<<" "<<y<<" ";
             return out;
         }
 };
 
-template<typename T> class matrix{
-    friend class complexNumber;
+template <typename T> class matrix{
     private:
     protected:
     public:
@@ -140,6 +157,7 @@ template<typename T> class matrix{
         }
 
         matrix(){
+            //hello();
         }
 
         void clearData(){
@@ -339,7 +357,7 @@ template<typename T> class matrix{
         }
 
         friend istream& operator>>(istream& in, matrix<T>& A){
-            A.clearData(); /// [666] Remove this line for less crashes (yes)
+            //A.clearData(); /// [666] Remove this line for less crashes (yes)
             in>>A.height>>A.width;
             A.data = new T*[A.height];
             for(int i=0; i<A.height; ++i)
@@ -361,6 +379,17 @@ template<typename T> class matrix{
             }
             return out;
         }
+
+        virtual hello(){
+            cout<<"Hi!";
+        }
+};
+
+template <typename T> class matrix_oarecare : matrix<T>{
+    matrix_oarecare(){
+        cout<<"Constructing";
+        this.hello();
+    }
 };
 
 void unitTest_complexNumber(){
@@ -408,39 +437,7 @@ void unitTest_complexNumber(){
     }
 }
 
-void unitTest_matrix(){
-    /*ifstream in("matrixTest.in");
-    matrix A,B;
-    in>>A;
-    in>>B;
-    */
-}
-
-void unitTest(){
-    unitTest_complexNumber();
-    //unitTest_matrix();
-}
-
-void firstHomework(){
-    /// Testing
-    unitTest();
-
-    /// Common Task #1 ("citirea informatiilor complete a n obiecte, memorarea si afisarea acestora")
-    /// Task #1
-    complexNumber v[20];
-    int n;
-
-    ifstream in("sortData.in");
-    in>>n;
-    for(int i=0; i<n; ++i) in>>v[i];
-    cout<<"Before sorting\n";
-    for(int i=0; i<n; ++i) cout<<v[i]<<"\n"; cout<<"\n"; /// Input data
-    sort(v, v+n);
-    cout<<"After sorting\n";
-    for(int i=0; i<n; ++i) cout<<v[i]<<"\n"; cout<<"\n"; /// Sorted Input data
-    in.close();
-
-    /// Task #2
+void unitTest_matrix_and_task_2(){
     typedef complexNumber crtType;
     matrix<crtType> A,B,C,D,E,AA,P;
     ifstream in2("homeworkData.in");
@@ -485,6 +482,33 @@ void firstHomework(){
 //    matrix<complexNumber> P;
     P = A * AA;
     cout<<"A * AA = \n"; cout<<P; cout<<"\n";
+}
+
+void complex_number_task_1(){
+    complexNumber v[20];
+    int n;
+
+    ifstream in("sortData.in");
+    in>>n;
+    for(int i=0; i<n; ++i) in>>v[i];
+    cout<<"Before sorting\n";
+    for(int i=0; i<n; ++i) cout<<v[i]<<"\n"; cout<<"\n"; /// Input data
+    sort(v, v+n);
+    cout<<"After sorting\n";
+    for(int i=0; i<n; ++i) cout<<v[i]<<"\n"; cout<<"\n"; /// Sorted Input data
+    in.close();
+}
+
+void firstHomework(){
+    /// Testing
+    unitTest_complexNumber();
+
+    /// Common Task #1 ("citirea informatiilor complete a n obiecte, memorarea si afisarea acestora")
+    /// Task #1
+    complex_number_task_1();
+
+    /// Task #2
+    unitTest_matrix_and_task_2();
 }
 
 int main()
