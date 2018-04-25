@@ -153,7 +153,7 @@ template <typename T> class matrix{
         }
 
         friend istream& operator>>(istream& in, matrix<T>& A){
-            A.clearData();
+            //A.clearData(); /// [666] Remove this line for less crashes (yes)
             in>>A.height>>A.width;
             A.data = new T*[A.height];
             for(int i=0; i<A.height; ++i)
@@ -203,8 +203,7 @@ template <typename T> class matrix{
                 for(int i=0; i<this->height; ++i)
                     if(data[i])
                         delete[] data[i];
-                if(data)
-                    delete[] data;
+                delete[] data;
                 data = NULL;
             }
         }
@@ -322,13 +321,8 @@ template <typename T> class matrix{
                 throw overflow_error("First Width and Second Height don't match! Cannot multiply matrixes.");
         }
 
-        virtual int isTriangularMatrix(){ /// Has 0's under + above the "main diagonal"
-            throw "Cannot compute whether this is a triangular Matrix!";
-        }
-
-        virtual bool isDiagonalMatrix(){ /// Has 0's under AND above the "main diagonal"
-            throw "Cannot compute whether this is a diagonal Matrix!";
-        }
+        virtual isTriangularMatrix() = 0;
+        virtual isDiagonalMatrix() = 0;
 
         virtual matrix stripSubmatrix(int stripRow, int stripCol){
             throw "Cannot strip a submatrix!";
@@ -343,11 +337,6 @@ template <typename T> class matrix{
         }
 };
 
-/*template <typename T> class matrixBuilder {
-    public:
-
-}*/
-
 template <typename T> class matrix_patratica : public matrix<T>{
     private:
     protected:
@@ -360,30 +349,6 @@ template <typename T> class matrix_patratica : public matrix<T>{
         }
 
         matrix_patratica(int linii_si_coloane) : matrix<T>(linii_si_coloane, linii_si_coloane){
-        }
-
-        int isTriangularMatrix() const{ /// 0 = Not Triangular at all
-                                         /// 1 = Triangular above OR below
-                                         /// 2 = Completely Triangular!
-            bool isTriangular_above = 1;
-            bool isTriangular_below = 1;
-
-            for(int row = 0; row < this->height; ++row)
-                for(int col = 0; col < this->width; ++col){
-                    if(row<col && this->data[row][col] != 0) isTriangular_above = 0;
-                    if(row>col && this->data[row][col] != 0) isTriangular_below = 0;
-            }
-
-            return isTriangular_above + isTriangular_below;
-        }
-
-        bool isDiagonalMatrix() const{
-            int triangularity = this->isTriangularMatrix();
-
-            if(triangularity == 2)
-                return 1;
-            else
-                return 0;
         }
 
         matrix_patratica stripSubmatrix(int stripRow, int stripCol) const{
@@ -461,7 +426,7 @@ template <typename T> class matrix_patratica : public matrix<T>{
         }
 
         friend istream& operator>>(istream& in, matrix_patratica<T>& A){
-            A.clearData();
+            //A.clearData(); /// [666] Remove this line for less crashes (yes)
             in>>A.height;
             A.width = A.height;
             A.data = new T*[A.height];
@@ -500,8 +465,8 @@ template <typename T> class matrix_oarecare : public matrix<T>{
         matrix_oarecare(int linii, int coloane) : matrix<T>(linii, coloane){
         }
 
-        friend istream& operator>>(istream& in, matrix_oarecare<T>& A){
-            A.clearData();
+        friend istream& operator>>(istream& in, matrix_oarecare<T>& A){ /// [667] De ce istream& cu ampersand?
+            //A.clearData(); /// [666] Remove this line for less crashes (yes)
             in>>A.height>>A.width;
             A.data = new T*[A.height];
             for(int i=0; i<A.height; ++i)
@@ -649,37 +614,13 @@ void unitTest_task_2(){
         for(int j=0; j<3; ++j)
             assert(B.data[i][j] == 0);
 
-    matrix_patratica<double> C(2);
+    matrix_patratica<int> C(2);
     C.data[0][0] = 7;
     C.data[0][1] = 3;
     C.data[1][0] = 8;
     C.data[1][1] = 9;
     cout<<"C = \n"<<C<<"\n";
     assert(C.determinant() == 39);
-
-    matrix_patratica<double> C_inverse = C.inverseMatrix();
-    cout<<"C's inverse matrix = \n"<<C_inverse<<"\n";
-    cout<<"C * C_inverse = \n"<<C * C_inverse<<"\n";
-
-    matrix_patratica<int> D(3),E(3),F(3);
-    for(int i=0; i<3; ++i)
-        for(int j=0; j<3; ++j)
-            D.data[i][j] = E.data[i][j] = F.data[i][j] = i*3 + j + 1;
-    for(int i=0; i<3; ++i)
-        for(int j=0; j<3; ++j)
-            if(i < j)
-                D.data[i][j] = F.data[i][j] = 0;
-            else if(i > j)
-                E.data[i][j] = F.data[i][j] = 0;
-    assert(C.isTriangularMatrix() == 0);
-    assert(D.isTriangularMatrix() == 1);
-    assert(E.isTriangularMatrix() == 1);
-    assert(F.isTriangularMatrix() == 2);
-    assert(!C.isDiagonalMatrix());
-    assert(!D.isDiagonalMatrix());
-    assert(!E.isDiagonalMatrix());
-    assert(F.isDiagonalMatrix());
-
     cout<<"--------------------- Unit Test Ends ---------------------\n";
 }
 
