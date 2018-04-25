@@ -33,6 +33,7 @@
 			<Add option="-fexceptions" />
 		</Compiler>
 		<Unit filename="homeworkData.in" />
+		<Unit filename="homework_2_data.in" />
 		<Unit filename="main.cpp" />
 		<Unit filename="matrixTest.in" />
 		<Unit filename="sortData.in" />
