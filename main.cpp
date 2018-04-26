@@ -234,9 +234,9 @@ template <typename T> class matrix{
         }
 
         matrix& operator=(const matrix& other){
+            clearData(); /// No memory leaks :D
             this->height = other.height;
             this->width = other.width;
-            clearData(); /// No memory leaks :D
             this->data = new T*[height];
             for(int i=0; i<this->height; ++i)
             {
@@ -343,16 +343,38 @@ template <typename T> class matrix{
         }
 };
 
-/*template <typename T> class matrixBuilder {
-    public:
-
-}*/
-
 template <typename T> class matrix_patratica : public matrix<T>{
     private:
     protected:
     public:
         matrix_patratica(){
+        }
+
+        matrix_patratica(const matrix_patratica& other){ /// [Mircea] Aici am adaugat constructor-ul matrix_patratica
+            this->height = other.height;
+            this->width = other.width;
+
+            this->data = new T*[this->height];
+            for(int i=0; i<this->height; ++i)
+            {
+                this->data[i] = new T[this->width];
+                for(int j=0; j<this->width; ++j)
+                    this->data[i][j] = other.data[i][j];
+            }
+        }
+
+        matrix_patratica& operator=(const matrix_patratica& other){ /// [Mircea] Aici am adaugat operator=
+            this->clearData(); /// No memory leaks :D
+            this->height = other.height;
+            this->width = other.width;
+            this->data = new T*[this->height];
+            for(int i=0; i<this->height; ++i)
+            {
+                this->data[i] = new T[this->width];
+                for(int j=0; j<this->width; ++j)
+                    this->data[i][j] = other.data[i][j];
+            }
+            return *this;
         }
 
         ~matrix_patratica(){
@@ -491,6 +513,33 @@ template <typename T> class matrix_oarecare : public matrix<T>{
     protected:
     public:
         matrix_oarecare(){
+        }
+
+        matrix_oarecare(const matrix_oarecare& other){ /// [Mircea] Aici am adaugat constructor-ul matrix_oarecare
+            this->height = other.height;
+            this->width = other.width;
+
+            this->data = new T*[this->height];
+            for(int i=0; i<this->height; ++i)
+            {
+                this->data[i] = new T[this->width];
+                for(int j=0; j<this->width; ++j)
+                    this->data[i][j] = other.data[i][j];
+            }
+        }
+
+        matrix_oarecare& operator=(const matrix_oarecare& other){ /// [Mircea] Aici am adaugat operator=
+            this->clearData(); /// No memory leaks :D
+            this->height = other.height;
+            this->width = other.width;
+            this->data = new T*[this->height];
+            for(int i=0; i<this->height; ++i)
+            {
+                this->data[i] = new T[this->width];
+                for(int j=0; j<this->width; ++j)
+                    this->data[i][j] = other.data[i][j];
+            }
+            return *this;
         }
 
         ~matrix_oarecare(){
@@ -649,6 +698,11 @@ void unitTest_task_2(){
         for(int j=0; j<3; ++j)
             assert(B.data[i][j] == 0);
 
+    matrix_oarecare<int> B_1(B);
+    matrix_oarecare<int> B_2 = B;
+    assert(B_1 == B);
+    assert(B_2 == B);
+
     matrix_patratica<double> C(2);
     C.data[0][0] = 7;
     C.data[0][1] = 3;
@@ -656,6 +710,11 @@ void unitTest_task_2(){
     C.data[1][1] = 9;
     cout<<"C = \n"<<C<<"\n";
     assert(C.determinant() == 39);
+
+    matrix_patratica<double> C_1(C);
+    matrix_patratica<double> C_2 = C;
+    assert(C_1 == C);
+    assert(C_2 == C);
 
     matrix_patratica<double> C_inverse = C.inverseMatrix();
     cout<<"C's inverse matrix = \n"<<C_inverse<<"\n";
